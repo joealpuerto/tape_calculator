@@ -1423,9 +1423,9 @@ step2_economy <- function(){
   Economy <- Economy %>%
     left_join(data_workers, by = 'key') %>%
     left_join(LSU, by = 'key') %>%
-    mutate(tot_productivity_ha = total_output/area_total, 
-           tot_productivity_pers = total_output/num_workers,
-           crop_productivity_ha = crop_prodval/area_ha,
+    mutate(tot_productivity_ha = (total_output+acrev)/area_ha, #JA 20Nov24: Based on SDG241; area_ha is already total area 
+           tot_productivity_pers = total_output+acrev/num_workers, #JA 20Nov24: Based on SDG241
+           #crop_productivity_ha = crop_prodval/area_ha, #JA 20Nov24: We cannot calculate this as there is no disaggregation of land for crops
            animal_productivity_lsu = anim_prodval/arais_lsu) %>%
     rowwise() %>%
     mutate(farm_sales = sum(c(crop_sales, cfp_sales, anim_sales, anpr_sales), na.rm = T))
@@ -1480,8 +1480,8 @@ step2_economy <- function(){
     mutate(netrev_pcapita = netrev/hh_adults,
            value_added_pcapita = value_added/hh_adults,
            value_added_ha = value_added/area_total,
-           value_added_gvp = value_added/total_output,
-           value_added_gvp = ifelse(value_added_gvp < 0 & total_output < 0, -1*value_added_gvp, value_added_gvp), # rule of inequality and division by negative numbers
+           value_added_gvp = value_added/(total_output+acred), #JA 20Nov: since acrev is part of total value of production
+           value_added_gvp = ifelse(value_added_gvp < 0 & (total_output+acrev) < 0, -1*value_added_gvp, value_added_gvp), # rule of inequality and division by negative numbers
            # International Poverty line 2.15 USD
            inc_person_day = (farm_sales + acrev)/hh_adults/365)
   
@@ -1604,7 +1604,3 @@ all_TAPE <- function(){
   
   return(TAPE_final)
 }
-
-
-
-
